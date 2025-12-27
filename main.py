@@ -118,7 +118,7 @@ class WithingsGCBridge:
             email = secrets["garmin"]["email"]
             password = secrets["garmin"]["password"]
             try:
-                garmin = garminconnect.Garmin(email, password)
+                garmin = garminconnect.Garmin(email, password, prompt_mfa=lambda: input("Enter MFA code: "))
                 garmin.login()
                 garmin.garth.dump(self.tokenstore)
 
