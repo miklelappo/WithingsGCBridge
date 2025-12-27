@@ -42,6 +42,7 @@ class Measurement:
     weight: float
     percent_fat: Optional[float]
     muscle_mass: Optional[float]
+    bone_mass: Optional[float]
 
 
 class WithingsGCBridge:
@@ -145,6 +146,7 @@ class WithingsGCBridge:
                   continue;
                 percent_fat = measurement.percent_fat
                 muscle_mass = measurement.muscle_mass
+                bone_mass = measurement.bone_mass
                 timestamp = measurement.datetime
                 timestamp = datetime.datetime(
                     year=timestamp.year,
@@ -156,7 +158,7 @@ class WithingsGCBridge:
                     microsecond=123456,  # add fake microseconds for garminconnect
                 )
                 time_string = timestamp.isoformat()
-                garmin.add_body_composition(weight=weight, percent_fat=percent_fat, muscle_mass=muscle_mass, timestamp=time_string)
+                garmin.add_body_composition(weight=weight, percent_fat=percent_fat, muscle_mass=muscle_mass, bone_mass=bone_mass, timestamp=time_string)
                 logger.info(f"added {measurement} to Garmin Connect")
         except (
             garminconnect.GarminConnectConnectionError,
@@ -255,7 +257,7 @@ class WithingsGCBridge:
         headers = {"Authorization": "Bearer " + access_token}
         payload: dict[str, str | int] = {
             "action": "getmeas",
-            "meastypes": "1,6,76",
+            "meastypes": "1,6,76,88",
             "category": 1,
             "lastupdate": int(last_sync.timestamp()),
         }
@@ -279,7 +281,12 @@ class WithingsGCBridge:
 
             date = datetime.datetime.fromtimestamp(payload["date"])
             standard_measures_by_type = {m['type']:standardize_measure(m) for m in payload["measures"]}
-            return Measurement(date, standard_measures_by_type.get(1), standard_measures_by_type.get(6), standard_measures_by_type.get(76))
+            return Measurement(date,
+                               weight = standard_measures_by_type.get(1),
+                               percent_fat = standard_measures_by_type.get(6),
+                               muscle_mass = standard_measures_by_type.get(76),
+                               bone_mass = standard_measures_by_type.get(88),
+                               )
 
         logger.info(f"Retrieved {len(measurements)} measurements from Withings")
         return [to_measurement(m) for m in measurements]
