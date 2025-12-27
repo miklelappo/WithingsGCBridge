@@ -43,6 +43,7 @@ class Measurement:
     percent_fat: Optional[float]
     muscle_mass: Optional[float]
     bone_mass: Optional[float]
+    metabolic_age: Optional[float] = None
 
 
 class WithingsGCBridge:
@@ -147,6 +148,7 @@ class WithingsGCBridge:
                 percent_fat = measurement.percent_fat
                 muscle_mass = measurement.muscle_mass
                 bone_mass = measurement.bone_mass
+                metabolic_age = measurement.metabolic_age
                 timestamp = measurement.datetime
                 timestamp = datetime.datetime(
                     year=timestamp.year,
@@ -158,7 +160,7 @@ class WithingsGCBridge:
                     microsecond=123456,  # add fake microseconds for garminconnect
                 )
                 time_string = timestamp.isoformat()
-                garmin.add_body_composition(weight=weight, percent_fat=percent_fat, muscle_mass=muscle_mass, bone_mass=bone_mass, timestamp=time_string)
+                garmin.add_body_composition(weight=weight, percent_fat=percent_fat, muscle_mass=muscle_mass, bone_mass=bone_mass, metabolic_age=metabolic_age, timestamp=time_string)
                 logger.info(f"added {measurement} to Garmin Connect")
         except (
             garminconnect.GarminConnectConnectionError,
@@ -257,7 +259,7 @@ class WithingsGCBridge:
         headers = {"Authorization": "Bearer " + access_token}
         payload: dict[str, str | int] = {
             "action": "getmeas",
-            "meastypes": "1,6,76,88",
+            "meastypes": "1,6,76,88,227",
             "category": 1,
             "lastupdate": int(last_sync.timestamp()),
         }
@@ -286,6 +288,7 @@ class WithingsGCBridge:
                                percent_fat = standard_measures_by_type.get(6),
                                muscle_mass = standard_measures_by_type.get(76),
                                bone_mass = standard_measures_by_type.get(88),
+                               metabolic_age = standard_measures_by_type.get(227)
                                )
 
         logger.info(f"Retrieved {len(measurements)} measurements from Withings")
